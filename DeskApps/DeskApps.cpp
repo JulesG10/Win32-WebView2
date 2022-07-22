@@ -8,7 +8,7 @@ DeskApps::~DeskApps()
 {
 }
 
-DeskApps* DeskApps::MainFrame()
+DeskApps *DeskApps::MainFrame()
 {
 	AppCoreOptions _options;
 	_options.centerWindow = TRUE;
@@ -22,11 +22,8 @@ DeskApps* DeskApps::MainFrame()
 	return new DeskApps(_options);
 }
 
-
-
 VOID DeskApps::OnJsonMessage(Json::Value message)
 {
-	
 }
 
 VOID DeskApps::OnExit()
@@ -35,26 +32,26 @@ VOID DeskApps::OnExit()
 
 VOID DeskApps::OnInit()
 {
-	ICoreWebView2Settings* Settings;
+	ICoreWebView2Settings *Settings;
 	wbWindow->get_Settings(&Settings);
 
-	Settings->put_IsScriptEnabled(TRUE); // javascript
-	Settings->put_IsWebMessageEnabled(TRUE); // message web
-	Settings->put_IsStatusBarEnabled(FALSE); // link bottom left
+	Settings->put_IsScriptEnabled(TRUE);				 // javascript
+	Settings->put_IsWebMessageEnabled(TRUE);			 // message web
+	Settings->put_IsStatusBarEnabled(FALSE);			 // link bottom left
 	Settings->put_AreDefaultScriptDialogsEnabled(FALSE); // no alert
-	Settings->put_IsZoomControlEnabled(FALSE); // no zoom
-	Settings->put_AreDefaultContextMenusEnabled(FALSE); // no right click
-	Settings->put_AreDevToolsEnabled(FALSE); // no dev tools
-	Settings->put_IsBuiltInErrorPageEnabled(FALSE); // disable default error page
+	Settings->put_IsZoomControlEnabled(FALSE);			 // no zoom
+	Settings->put_AreDefaultContextMenusEnabled(FALSE);	 // no right click
+	Settings->put_AreDevToolsEnabled(FALSE);			 // no dev tools
+	Settings->put_IsBuiltInErrorPageEnabled(FALSE);		 // disable default error page
 
 	Settings->Release();
-
 
 	LPWSTR webPagePath = PathCombineModuleFileName("page.html");
 	wbWindow->Navigate(webPagePath);
 
 	EventRegistrationToken navToken;
-	wbWindow->add_NavigationCompleted(Callback<ICoreWebView2NavigationCompletedEventHandler>([&](ICoreWebView2* webview, ICoreWebView2NavigationCompletedEventArgs* args) {
+	wbWindow->add_NavigationCompleted(Callback<ICoreWebView2NavigationCompletedEventHandler>([&](ICoreWebView2 *webview, ICoreWebView2NavigationCompletedEventArgs *args)
+																							 {
 		BOOL success;
 		args->get_IsSuccess(&success);
 		if (!success)
@@ -63,11 +60,13 @@ VOID DeskApps::OnInit()
 			args->get_WebErrorStatus(&error);
 		}
 
-		return S_OK;
-	}).Get(), &navToken);
+		return S_OK; })
+										  .Get(),
+									  &navToken);
 
 	EventRegistrationToken winToken;
-	wbWindow->add_NewWindowRequested(Callback<ICoreWebView2NewWindowRequestedEventHandler>([&](ICoreWebView2* webview, ICoreWebView2NewWindowRequestedEventArgs* args) {
+	wbWindow->add_NewWindowRequested(Callback<ICoreWebView2NewWindowRequestedEventHandler>([&](ICoreWebView2 *webview, ICoreWebView2NewWindowRequestedEventArgs *args)
+																						   {
 		/*
 		LPWSTR uri;
 		args->get_Uri(&uri);
@@ -75,8 +74,9 @@ VOID DeskApps::OnInit()
 		*/
 		args->put_Handled(TRUE);
 
-		return S_OK;
-	}).Get(), &winToken);
+		return S_OK; })
+										 .Get(),
+									 &winToken);
 }
 
 LRESULT DeskApps::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -106,4 +106,3 @@ LRESULT DeskApps::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	return 0;
 }
-

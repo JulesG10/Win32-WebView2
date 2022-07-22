@@ -1,6 +1,5 @@
 #include "AppCore.h"
 
-
 AppCore::AppCore(AppCoreOptions _options)
 {
 	options = _options;
@@ -8,7 +7,6 @@ AppCore::AppCore(AppCoreOptions _options)
 AppCore::~AppCore()
 {
 }
-
 
 INT AppCore::StartWithArgs(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -32,7 +30,6 @@ INT AppCore::StartWithArgs(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR l
 		this->ErrorMessage("ERROR - Create Context", "Webview2 context creation has failed !");
 		return 1;
 	}
-	
 
 	MSG message;
 	while (GetMessage(&message, NULL, 0, 0))
@@ -49,12 +46,8 @@ INT AppCore::Start(HINSTANCE hInstance)
 	return this->StartWithArgs(hInstance, NULL, NULL, SW_SHOW);
 }
 
-
 VOID AppCore::OnInit()
 {
-	
-	
-	
 }
 VOID AppCore::OnExit()
 {
@@ -78,8 +71,8 @@ HRESULT AppCore::_CreateContext()
 		return E_FAIL;
 	}
 
-	return CreateCoreWebView2EnvironmentWithOptions(nullptr, this->webDir, nullptr, Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>([this](HRESULT result, ICoreWebView2Environment* env) -> HRESULT
-		{
+	return CreateCoreWebView2EnvironmentWithOptions(nullptr, this->webDir, nullptr, Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>([this](HRESULT result, ICoreWebView2Environment *env) -> HRESULT
+																																						 {
 			if (!env)
 			{
 				return E_FAIL;
@@ -90,8 +83,8 @@ HRESULT AppCore::_CreateContext()
 				{
 					return CreateCoreWebViewController(result, controller);
 				}).Get());
-			return S_OK;
-		}).Get());
+			return S_OK; })
+																						.Get());
 }
 HRESULT AppCore::_RegisterClass()
 {
@@ -114,12 +107,12 @@ HRESULT AppCore::_RegisterClass()
 	{
 		return S_OK;
 	}
-    return E_FAIL;
+	return E_FAIL;
 }
 HRESULT AppCore::_CreateWindow()
 {
 	RECT rect{};
-	MONITORINFO mi = { sizeof(mi) };
+	MONITORINFO mi = {sizeof(mi)};
 
 	GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
 	int w = options.width;
@@ -130,16 +123,15 @@ HRESULT AppCore::_CreateWindow()
 	SetWindowPos(hWnd, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
 
 	hWnd = CreateWindowExW(NULL,
-		options.windowClass,
-		options.title,
-	    options.style,
-		x, y,
-		w, h,
-		NULL,//options.parent,
-		NULL,
-		hInstance,
-		this
-	);
+						   options.windowClass,
+						   options.title,
+						   options.style,
+						   x, y,
+						   w, h,
+						   NULL, // options.parent,
+						   NULL,
+						   hInstance,
+						   this);
 
 	if (hWnd)
 	{
@@ -178,15 +170,17 @@ LRESULT AppCore::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 LRESULT AppCore::_StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	AppCore* app;
-	if (message == WM_NCCREATE || message == WM_CREATE) {
-		CREATESTRUCT* lpcs = reinterpret_cast<CREATESTRUCT*>(lParam);
-		app = static_cast<AppCore*>(lpcs->lpCreateParams);
+	AppCore *app;
+	if (message == WM_NCCREATE || message == WM_CREATE)
+	{
+		CREATESTRUCT *lpcs = reinterpret_cast<CREATESTRUCT *>(lParam);
+		app = static_cast<AppCore *>(lpcs->lpCreateParams);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(app));
 		app->hWnd = hWnd;
 	}
-	else {
-		app = reinterpret_cast<AppCore*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+	else
+	{
+		app = reinterpret_cast<AppCore *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 	}
 
 	if (app)
@@ -196,41 +190,43 @@ LRESULT AppCore::_StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return NULL;
 }
 
-VOID AppCore::ErrorMessage(const char* title, const char* message)
+VOID AppCore::ErrorMessage(const char *title, const char *message)
 {
 	if (options.showError)
 	{
 		MessageBoxA(NULL, (LPCSTR)message, (LPCSTR)title, MB_OK | MB_ICONERROR);
 	}
 }
-HRESULT AppCore::CreateCoreWebViewController(HRESULT result, ICoreWebView2Controller* controller)
+HRESULT AppCore::CreateCoreWebViewController(HRESULT result, ICoreWebView2Controller *controller)
 {
 
-	if (controller != nullptr) {
+	if (controller != nullptr)
+	{
 		wbController = controller;
 		wbController->get_CoreWebView2(&wbWindow);
 	}
-	else {
+	else
+	{
 		return E_FAIL;
 	}
-
 
 	RECT bounds;
 	GetClientRect(hWnd, &bounds);
 	wbController->put_Bounds(bounds);
 
 	EventRegistrationToken permToken;
-	wbWindow->add_PermissionRequested(Callback<ICoreWebView2PermissionRequestedEventHandler>([](ICoreWebView2* webview, ICoreWebView2PermissionRequestedEventArgs* args)
-		{
+	wbWindow->add_PermissionRequested(Callback<ICoreWebView2PermissionRequestedEventHandler>([](ICoreWebView2 *webview, ICoreWebView2PermissionRequestedEventArgs *args)
+																							 {
 			args->put_State(COREWEBVIEW2_PERMISSION_STATE::COREWEBVIEW2_PERMISSION_STATE_ALLOW);
-			return S_OK;
-		}).Get(), &permToken);
-
+			return S_OK; })
+										  .Get(),
+									  &permToken);
 
 	EventRegistrationToken msgToken;
-	wbWindow->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>([this](ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
-		return OnMessageReceived(webview, args);
-		}).Get(), &msgToken);
+	wbWindow->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>([this](ICoreWebView2 *webview, ICoreWebView2WebMessageReceivedEventArgs *args) -> HRESULT
+																						   { return OnMessageReceived(webview, args); })
+										 .Get(),
+									 &msgToken);
 
 	this->OnInit();
 
@@ -268,7 +264,7 @@ HRESULT AppCore::CreateWebFolder()
 
 	return S_OK;
 }
-HRESULT AppCore::OnMessageReceived(ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* args)
+HRESULT AppCore::OnMessageReceived(ICoreWebView2 *webview, ICoreWebView2WebMessageReceivedEventArgs *args)
 {
 	LPWSTR jsonMessage;
 	args->get_WebMessageAsJson(&jsonMessage);
@@ -291,17 +287,16 @@ HRESULT AppCore::OnMessageReceived(ICoreWebView2* webview, ICoreWebView2WebMessa
 	return S_OK;
 }
 
-
 std::string AppCore::GetUuid()
 {
 	UUID uuid;
-	char* str;
+	char *str;
 	std::string out;
 
 	UuidCreate(&uuid);
-	UuidToStringA(&uuid, (RPC_CSTR*)&str);
+	UuidToStringA(&uuid, (RPC_CSTR *)&str);
 	out = std::string("@") + std::string(str);
-	RpcStringFreeA((RPC_CSTR*)&str);
+	RpcStringFreeA((RPC_CSTR *)&str);
 
 	return out;
 }
@@ -322,10 +317,9 @@ HRESULT AppCore::ClearUserData()
 			auto webView2Profile2 = webView2Profile.try_query<ICoreWebView2Profile2>();
 			if (webView2Profile2)
 			{
-				webView2Profile2->ClearBrowsingDataAll(Callback<ICoreWebView2ClearBrowsingDataCompletedHandler>([](HRESULT error) -> HRESULT {
-
-					return S_OK;
-					}).Get());
+				webView2Profile2->ClearBrowsingDataAll(Callback<ICoreWebView2ClearBrowsingDataCompletedHandler>([](HRESULT error) -> HRESULT
+																												{ return S_OK; })
+														   .Get());
 				return S_OK;
 			}
 		}
@@ -335,7 +329,7 @@ HRESULT AppCore::ClearUserData()
 HRESULT AppCore::RemoveDataFolders()
 {
 	LPWSTR exePath = this->PathCombineModuleFileName("");
-	for (const auto& entry : std::filesystem::directory_iterator(exePath))
+	for (const auto &entry : std::filesystem::directory_iterator(exePath))
 	{
 
 		if (entry.exists() && entry.is_directory())
@@ -353,7 +347,7 @@ HRESULT AppCore::RemoveDataFolders()
 
 				if (SHFileOperationW(&sf) != 0)
 				{
-					//return E_FAIL;
+					// return E_FAIL;
 				}
 			}
 		}
@@ -366,6 +360,6 @@ LPWSTR AppCore::PathCombineModuleFileName(std::string filename)
 	LPWSTR path = new wchar_t[MAX_PATH];
 	GetModuleFileNameW(NULL, path, MAX_PATH);
 	PathRemoveFileSpecW(path);
-	PathCchCombine(path, MAX_PATH, path, (PCWSTR)(std::wstring(filename.begin(),filename.end()).c_str()));
+	PathCchCombine(path, MAX_PATH, path, (PCWSTR)(std::wstring(filename.begin(), filename.end()).c_str()));
 	return path;
 }

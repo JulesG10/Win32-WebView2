@@ -1,13 +1,13 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
 
-#include<iostream>
-#include<string>
-#include<vector>
-#include<fstream>
-#include<filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <filesystem>
 
-#include<Windows.h>
+#include <Windows.h>
 
 #include <wrl.h>
 #include <wil/com.h>
@@ -20,20 +20,21 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Pathcch.lib")
-#pragma comment(lib, "rpcrt4.lib") 
+#pragma comment(lib, "rpcrt4.lib")
 
 #define HAS_ERROR(x) x != S_OK
 
 using namespace Microsoft::WRL;
 
-typedef struct AppCoreOptions {
+typedef struct AppCoreOptions
+{
 	BOOL centerWindow;
 	DWORD style;
 	LPWSTR title;
 	LPWSTR windowClass;
 	int width, height;
 	BOOL showError;
-}AppCoreOptions;
+} AppCoreOptions;
 
 class AppCore
 {
@@ -43,29 +44,28 @@ public:
 
 	INT Start(HINSTANCE hInstance);
 	INT StartWithArgs(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-	
+
 	HWND GethWnd();
+
 protected:
 	virtual VOID OnJsonMessage(Json::Value);
 
 	virtual VOID OnExit();
 	virtual VOID OnInit();
-	
+
 	virtual LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	
+
 	HINSTANCE hInstance = NULL;
 	HWND hWnd = nullptr;
 	AppCoreOptions options;
 	LPWSTR webDir = nullptr;
 	std::string appId;
-	
 
 	wil::com_ptr<ICoreWebView2Controller> wbController;
 	wil::com_ptr<ICoreWebView2> wbWindow;
 	wil::com_ptr<ICoreWebView2Environment> wbEnv;
 
-	VOID ErrorMessage(const char*, const char*);
-	
+	VOID ErrorMessage(const char *, const char *);
 
 	HRESULT CreateWebFolder();
 	HRESULT ClearUserData();
@@ -74,13 +74,14 @@ protected:
 	std::string GetUuid();
 	LPWSTR PathCombineModuleFileName(std::string filename);
 	VOID SendJsonMessage(Json::Value);
+
 private:
-	HRESULT  _RegisterClass();
-	HRESULT  _CreateWindow();
-	HRESULT  _CreateContext();
-	
-	HRESULT CreateCoreWebViewController(HRESULT result, ICoreWebView2Controller* controller);
-	HRESULT OnMessageReceived(ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* args);
+	HRESULT _RegisterClass();
+	HRESULT _CreateWindow();
+	HRESULT _CreateContext();
+
+	HRESULT CreateCoreWebViewController(HRESULT result, ICoreWebView2Controller *controller);
+	HRESULT OnMessageReceived(ICoreWebView2 *webview, ICoreWebView2WebMessageReceivedEventArgs *args);
 
 	static LRESULT CALLBACK _StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };
