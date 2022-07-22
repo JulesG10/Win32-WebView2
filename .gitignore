@@ -1,6 +1,9 @@
-/x64
+/x64/Release
 /packages
 /.vs
 /Release
 /DeskApps/Release
 /DeskApps/x64
+*.exe
+*.pdb
+*.dll
