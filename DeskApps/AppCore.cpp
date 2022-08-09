@@ -10,6 +10,7 @@ AppCore::~AppCore()
 
 INT AppCore::StartWithArgs(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	this->hInstance = hInstance;
 	if (HAS_ERROR(this->_RegisterClass()))
 	{
 		this->ErrorMessage("ERROR - Regiter Class", "Register window class has failed !");
@@ -355,6 +356,7 @@ HRESULT AppCore::RemoveDataFolders()
 
 	return S_OK;
 }
+
 LPWSTR AppCore::PathCombineModuleFileName(std::string filename)
 {
 	LPWSTR path = new wchar_t[MAX_PATH];
@@ -362,4 +364,128 @@ LPWSTR AppCore::PathCombineModuleFileName(std::string filename)
 	PathRemoveFileSpecW(path);
 	PathCchCombine(path, MAX_PATH, path, (PCWSTR)(std::wstring(filename.begin(), filename.end()).c_str()));
 	return path;
+}
+
+HRESULT AppCore::ExtractRessource(INT id, LPWSTR name, LPWSTR extractpath)
+{
+	HRSRC hRes = FindResource(this->hInstance, MAKEINTRESOURCE(id), name);
+	if (hRes)
+	{
+		HGLOBAL hMem = LoadResource(this->hInstance, hRes);
+		DWORD size = SizeofResource(this->hInstance, hRes);
+
+		if (hMem)
+		{
+			char* resText = reinterpret_cast<char*>(LockResource(hMem));
+			
+			std::ofstream outfile(extractpath, std::ios::out | std::ios::binary);
+			if (outfile.is_open() && outfile.good())
+			{
+				outfile.write(resText, size+1);
+			}
+			
+			outfile.close();
+			
+			FreeResource(hMem);
+			return S_OK;
+		}
+	}
+
+	return E_FAIL;
+}
+
+
+HRESULT AppCore::UnZip(LPWSTR path, std::string dir)
+{
+	std::wstring tmp(path);
+	std::string from(tmp.begin(), tmp.end());
+
+	struct zip* za;
+	struct zip_file* zf;
+	struct zip_stat sb;
+
+	char buf[100];
+
+	int err;
+	int i, len;
+	int fd;
+	long long sum;
+
+	if ((za = zip_open(from.c_str(), 0, &err)) == NULL) {
+		return E_FAIL;
+	}
+
+	for (i = 0; i < zip_get_num_entries(za, 0); i++) {
+		if (zip_stat_index(za, i, 0, &sb) == 0) {
+			std::string sbname(sb.name);
+			for (size_t k = 0; k < sbname.length(); k++)
+			{
+				if (sbname[k] == '/')
+				{
+					sbname[k] = '\\';
+				}
+			}
+
+			std::wstring wfname = this->PathCombineModuleFileName(dir + "\\" + sbname);
+			std::string fname(wfname.begin(), wfname.end());
+
+			if (sbname[sbname.length() - 1] == '\\')
+			{
+				std::string tmpname = "";
+				for (size_t k = 0; k < sbname.length(); k++)
+				{
+					if (sbname[k] == '\\' && tmpname.length() != 0)
+					{
+						LPWSTR dirpath = this->PathCombineModuleFileName(dir + "\\" + tmpname);
+						if (!this->DirectoryExists(dirpath))
+						{
+							if (!CreateDirectoryW(dirpath, NULL))
+							{
+								return E_FAIL;
+							}
+						}
+					}
+					tmpname += sbname[k];
+				}
+			}
+			else {
+				zf = zip_fopen_index(za, i, 0);
+				if (!zf) {
+					return E_FAIL;
+				}
+
+
+				fd = _open(fname.c_str(), O_RDWR | O_TRUNC | O_CREAT, 0644);
+				if (fd < 0) {
+					return E_FAIL;
+				}
+
+				sum = 0;
+				while (sum != sb.size) {
+					len = zip_fread(zf, buf, 100);
+					if (len < 0) {
+						return E_FAIL;
+					}
+					_write(fd, buf, len);
+					sum += len;
+				}
+				_close(fd);
+				zip_fclose(zf);
+			}
+		}
+	}
+
+	if (zip_close(za) == -1) {
+		return E_FAIL;
+	}
+
+	return S_OK;
+}
+
+BOOL AppCore::DirectoryExists(LPCTSTR szPath)
+{
+	DWORD dwAttrib = GetFileAttributes(szPath);
+
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }

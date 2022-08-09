@@ -1,9 +1,10 @@
-/x64/Release
 /packages
 /.vs
 /Release
-/DeskApps/Release
+/Debug
+/x64
 /DeskApps/x64
+/DeskApps/Release
 *.exe
 *.pdb
 *.dll

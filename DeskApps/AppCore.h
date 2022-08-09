@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include <Windows.h>
+#include <Winuser.h>
 
 #include <wrl.h>
 #include <wil/com.h>
@@ -17,6 +18,11 @@
 #include <stdlib.h>
 #include <shlwapi.h>
 #include <pathcch.h>
+
+
+#include<zip.h>
+#include <fcntl.h>
+#include <io.h>
 
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Pathcch.lib")
@@ -72,7 +78,13 @@ protected:
 	HRESULT RemoveDataFolders();
 
 	std::string GetUuid();
+
 	LPWSTR PathCombineModuleFileName(std::string filename);
+	HRESULT ExtractRessource(INT id, LPWSTR name, LPWSTR extractname);
+	HRESULT UnZip(LPWSTR path, std::string dir);
+	BOOL DirectoryExists(LPCTSTR szPath);
+
+
 	VOID SendJsonMessage(Json::Value);
 
 private:

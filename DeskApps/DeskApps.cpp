@@ -1,7 +1,9 @@
 #include "DeskApps.h"
 
+
 DeskApps::DeskApps(AppCoreOptions options) : AppCore(options)
 {
+
 }
 
 DeskApps::~DeskApps()
@@ -12,8 +14,8 @@ DeskApps *DeskApps::MainFrame()
 {
 	AppCoreOptions _options;
 	_options.centerWindow = TRUE;
-	_options.height = 500;
-	_options.width = 500;
+	_options.height = 600;
+	_options.width = 800;
 	_options.title = (LPWSTR)L"DeskApss";
 	_options.windowClass = (LPWSTR)L"deskappclass";
 	_options.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -22,16 +24,37 @@ DeskApps *DeskApps::MainFrame()
 	return new DeskApps(_options);
 }
 
+
 VOID DeskApps::OnJsonMessage(Json::Value message)
 {
+	
 }
 
 VOID DeskApps::OnExit()
 {
+	DeleteFileW(this->webZip);
 }
 
 VOID DeskApps::OnInit()
 {
+	this->webZip = this->PathCombineModuleFileName("data.zip");
+	DeleteFileW(this->webZip);
+
+	if (this->ExtractRessource(IDR_WEB_DATA1, (LPWSTR)(L"WEB_DATA"), webZip) != S_OK)
+	{
+		this->ErrorMessage("ERROR - Load DeskApps", "Fail to load DeskApps Starting page !");
+		this->ExitApp();
+		return;
+	}
+
+	std::wstring tmp(this->webDir);
+	if (this->UnZip(this->webZip, std::string(tmp.begin(),tmp.end())) != S_OK)
+	{
+		this->ErrorMessage("ERROR - Load DeskApps", "Fail to load DeskApps Starting page !");
+		this->ExitApp();
+		return;
+	}
+
 	ICoreWebView2Settings *Settings;
 	wbWindow->get_Settings(&Settings);
 
@@ -46,7 +69,7 @@ VOID DeskApps::OnInit()
 
 	Settings->Release();
 
-	LPWSTR webPagePath = PathCombineModuleFileName("page.html");
+	LPWSTR webPagePath = PathCombineModuleFileName(appId+ "\\" + "index.html");
 	wbWindow->Navigate(webPagePath);
 
 	EventRegistrationToken navToken;
@@ -92,12 +115,7 @@ LRESULT DeskApps::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		};
 		break;
 	case WM_DESTROY:
-		this->wbController->Close();
-		this->wbEnv->Release();
-		this->wbWindow->Stop();
-
-		UnregisterClassW(options.windowClass, hInstance);
-		PostQuitMessage(0);
+		this->ExitApp();
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -105,4 +123,14 @@ LRESULT DeskApps::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 
 	return 0;
+}
+
+VOID DeskApps::ExitApp()
+{
+	this->wbController->Close();
+	this->wbEnv->Release();
+	this->wbWindow->Stop();
+
+	UnregisterClassW(options.windowClass, hInstance);
+	PostQuitMessage(0);
 }
