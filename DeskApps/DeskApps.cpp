@@ -37,24 +37,6 @@ VOID DeskApps::OnExit()
 
 VOID DeskApps::OnInit()
 {
-	this->webZip = this->PathCombineModuleFileName("data.zip");
-	DeleteFileW(this->webZip);
-
-	if (this->ExtractRessource(IDR_WEB_DATA1, (LPWSTR)(L"WEB_DATA"), webZip) != S_OK)
-	{
-		this->ErrorMessage("ERROR - Load DeskApps", "Fail to load DeskApps Starting page !");
-		this->ExitApp();
-		return;
-	}
-
-	std::wstring tmp(this->webDir);
-	if (this->UnZip(this->webZip, std::string(tmp.begin(),tmp.end())) != S_OK)
-	{
-		this->ErrorMessage("ERROR - Load DeskApps", "Fail to load DeskApps Starting page !");
-		this->ExitApp();
-		return;
-	}
-
 	ICoreWebView2Settings *Settings;
 	wbWindow->get_Settings(&Settings);
 
@@ -68,10 +50,7 @@ VOID DeskApps::OnInit()
 	Settings->put_IsBuiltInErrorPageEnabled(FALSE);		 // disable default error page
 
 	Settings->Release();
-
-	LPWSTR webPagePath = PathCombineModuleFileName(appId+ "\\" + "index.html");
-	wbWindow->Navigate(webPagePath);
-
+	
 	EventRegistrationToken navToken;
 	wbWindow->add_NavigationCompleted(Callback<ICoreWebView2NavigationCompletedEventHandler>([&](ICoreWebView2 *webview, ICoreWebView2NavigationCompletedEventArgs *args)
 																							 {
@@ -81,6 +60,8 @@ VOID DeskApps::OnInit()
 		{
 			COREWEBVIEW2_WEB_ERROR_STATUS error;
 			args->get_WebErrorStatus(&error);
+			this->ErrorMessage("ERROR - Application Navigation",("Navigation failed with code " + std::to_string(error)).c_str());
+			this->ExitApp();
 		}
 
 		return S_OK; })
@@ -97,9 +78,28 @@ VOID DeskApps::OnInit()
 		*/
 		args->put_Handled(TRUE);
 
-		return S_OK; })
-										 .Get(),
-									 &winToken);
+		return S_OK; }).Get(),&winToken);
+
+	this->webZip = this->PathCombineModuleFileName("data.zip");
+	DeleteFileW(this->webZip);
+
+	if (this->ExtractRessource(IDR_WEB_DATA1, (LPWSTR)(L"WEB_DATA"), webZip) != S_OK)
+	{
+		this->ErrorMessage("ERROR - Load DeskApps", "Fail to load DeskApps Starting page !");
+		this->ExitApp();
+		return;
+	}
+
+	std::wstring tmp(this->webDir);
+	if (this->UnZip(this->webZip, std::string(tmp.begin(), tmp.end())) != S_OK)
+	{
+		this->ErrorMessage("ERROR - Load DeskApps", "Fail to load DeskApps Starting page !");
+		this->ExitApp();
+		return;
+	}
+
+	LPWSTR webPagePath = PathCombineModuleFileName(appId + "\\" + "index.html");
+	wbWindow->Navigate(webPagePath);
 }
 
 LRESULT DeskApps::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
